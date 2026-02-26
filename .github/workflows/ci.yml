@@ -36,7 +36,7 @@ jobs:
           xcodebuild test \
             -project mpc/mpc.xcodeproj \
             -scheme mpc \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=macOS,variant=Designed for iPad' \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
 
