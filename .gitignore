@@ -1,0 +1,80 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+!*.xcworkspace/xcshareddata/
+
+# Build
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods (if needed later)
+Pods/
+*.xcworkspace
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Obj-C / Swift
+*.hmap
+
+# App packaging
+*.app
+*.appex
+*.framework
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift PM resolve file — commit this for apps, ignore for libraries
+# Package.resolved
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+__MACOSX/
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment / secrets
+*.env
+*.env.*
+!*.env.example
+xcconfig/secrets.xcconfig
+Config/secrets.xcconfig
+
+# SwiftLint
+.swiftlint.yml.bak
+
+# Sourcery
+.sourcery-cache/
+
+# TestFlight
+ExportOptions.plist
+
+# Instruments
+*.trace
+
+# Core Data
+*.mom
+*.momd
