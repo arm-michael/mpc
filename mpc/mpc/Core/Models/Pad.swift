@@ -52,14 +52,14 @@ struct SampleMetadata: Codable, Equatable {
     // Custom encode: emit `null` for nil optional fields so the JSON index
     // explicitly records absence rather than omitting keys entirely.
     func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(duration, forKey: .duration)
-        try c.encode(sampleRate, forKey: .sampleRate)
-        try c.encode(channelCount, forKey: .channelCount)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(originalPrompt, forKey: .originalPrompt)
-        try c.encode(mode, forKey: .mode)
-        try c.encode(projectId, forKey: .projectId)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(sampleRate, forKey: .sampleRate)
+        try container.encode(channelCount, forKey: .channelCount)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(originalPrompt, forKey: .originalPrompt)
+        try container.encode(mode, forKey: .mode)
+        try container.encode(projectId, forKey: .projectId)
     }
 }
 
@@ -90,9 +90,9 @@ struct Pad: Codable, Identifiable, Equatable {
 
     // Custom encode: emit `null` for nil optional fields.
     func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(sampleURL, forKey: .sampleURL)
-        try c.encode(metadata, forKey: .metadata)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(sampleURL, forKey: .sampleURL)
+        try container.encode(metadata, forKey: .metadata)
     }
 }
