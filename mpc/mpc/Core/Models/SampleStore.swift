@@ -106,8 +106,11 @@ final class SampleStore {
 
     private func load() {
         guard fileManager.fileExists(atPath: indexURL.path),
-              let data = try? Data(contentsOf: indexURL),
-              let decoded = try? JSONDecoder().decode([Pad].self, from: data),
+              let data = try? Data(contentsOf: indexURL)
+        else { return }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let decoded = try? decoder.decode([Pad].self, from: data),
               decoded.count == 8
         else { return }
 

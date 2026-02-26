@@ -42,6 +42,25 @@ struct SampleMetadata: Codable, Equatable {
         self.mode = mode
         self.projectId = projectId
     }
+
+    // Explicit CodingKeys so synthesised init(from:) can decode.
+    private enum CodingKeys: String, CodingKey {
+        case duration, sampleRate, channelCount, createdAt
+        case originalPrompt, mode, projectId
+    }
+
+    // Custom encode: emit `null` for nil optional fields so the JSON index
+    // explicitly records absence rather than omitting keys entirely.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(duration, forKey: .duration)
+        try c.encode(sampleRate, forKey: .sampleRate)
+        try c.encode(channelCount, forKey: .channelCount)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(originalPrompt, forKey: .originalPrompt)
+        try c.encode(mode, forKey: .mode)
+        try c.encode(projectId, forKey: .projectId)
+    }
 }
 
 /// Represents a single pad in the 8-pad grid.
@@ -62,5 +81,18 @@ struct Pad: Codable, Identifiable, Equatable {
         self.id = id
         self.sampleURL = sampleURL
         self.metadata = metadata
+    }
+
+    // Explicit CodingKeys so synthesised init(from:) can decode.
+    private enum CodingKeys: String, CodingKey {
+        case id, sampleURL, metadata
+    }
+
+    // Custom encode: emit `null` for nil optional fields.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(sampleURL, forKey: .sampleURL)
+        try c.encode(metadata, forKey: .metadata)
     }
 }

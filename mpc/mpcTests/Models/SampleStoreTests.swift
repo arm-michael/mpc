@@ -2,6 +2,8 @@ import Testing
 import Foundation
 @testable import mpc
 
+// Tests share the simulator's Documents directory via SampleStore — run serially.
+@Suite(.serialized)
 struct SampleStoreTests {
 
     // MARK: - Helpers
