@@ -30,10 +30,12 @@ final class SampleStore {
         self.fileManager = fileManager
         self.pads = (0...7).map { Pad(id: $0) }
 
-        let documents = fileManager.urls(
+        guard let documents = fileManager.urls(
             for: .documentDirectory,
             in: .userDomainMask
-        ).first!
+        ).first else {
+            preconditionFailure("Documents directory unavailable")
+        }
         samplesDirectory = documents.appendingPathComponent("samples", isDirectory: true)
         indexURL = documents.appendingPathComponent("pad_index.json")
 
@@ -91,8 +93,8 @@ final class SampleStore {
 
     /// Returns `true` if at least 100 MB of free space is available.
     func hasAvailableStorage() -> Bool {
-        let available = availableDiskSpaceBytes()
-        return available == nil || available! >= Self.minimumFreeSpaceBytes
+        guard let available = availableDiskSpaceBytes() else { return true }
+        return available >= Self.minimumFreeSpaceBytes
     }
 
     // MARK: - Private
