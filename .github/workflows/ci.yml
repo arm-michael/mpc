@@ -38,7 +38,9 @@ jobs:
             -scheme mpc \
             -destination 'platform=macOS,variant=Designed for iPad' \
             -resultBundlePath TestResults.xcresult \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM=""
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
