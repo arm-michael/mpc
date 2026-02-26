@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct mpcApp: App {
+struct MPCApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
