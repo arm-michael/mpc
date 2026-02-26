@@ -20,15 +20,15 @@ jobs:
       - name: Build
         run: |
           xcodebuild build \
-            -project MPC.xcodeproj \
-            -scheme MPC \
+            -project mpc/mpc.xcodeproj \
+            -scheme mpc \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Test
         run: |
           xcodebuild test \
-            -project MPC.xcodeproj \
-            -scheme MPC \
+            -project mpc/mpc.xcodeproj \
+            -scheme mpc \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             CODE_SIGNING_ALLOWED=NO
