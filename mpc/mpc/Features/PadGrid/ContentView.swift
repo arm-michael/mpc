@@ -1,24 +1,15 @@
-//
-//  ContentView.swift
-//  mpc
-//
-//  Created by Michael Gamble on 2/26/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        PadGridView()
     }
 }
 
 #Preview {
+    let engine = AudioEngine()
     ContentView()
+        .environment(SampleStore())
+        .environment(engine)
+        .environment(PlaybackService(engine: engine))
 }
