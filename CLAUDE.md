@@ -31,9 +31,10 @@ Full spec: `prompt.md`
 
 ## Repo Status
 
-> **NOT YET INITIALIZED.** The SWE agent must run the repo init sequence below before any feature work begins.
+> **INITIALIZED.** Repo is live at https://github.com/arm-michael/mpc
+> `main` is protected. All feature work via PR. Do not push directly to `main`.
 
-### One-time Repo Init (SWE IMPLEMENTER — run once)
+### One-time Repo Init (COMPLETE — for reference only)
 
 ```bash
 # 1. Initialize git
@@ -182,12 +183,12 @@ ORCHESTRATOR SESSION STATE:
     Mode: idle
     Active Story: —
     Active Branch: —
-    Repo: NOT YET INITIALIZED
+    Repo: initialized ✅
 
   Shared:
-    GitHub Repo: TBD (pending init)
-    Gate Status: Awaiting repo init (Step 0)
-    Blockers: repo not initialized
+    GitHub Repo: arm-michael/mpc
+    Gate Status: Repo init complete ✅ — ready for Sprint 1
+    Blockers: none
 ```
 
 ---
