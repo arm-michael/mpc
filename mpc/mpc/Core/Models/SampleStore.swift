@@ -7,7 +7,10 @@ import Observation
 ///   - `Documents/pad_index.json` — the canonical pad → sample mapping
 ///   - `Documents/samples/{padID}_{uuid}.wav` — the audio assets
 ///
-/// All mutations call `save()` immediately. On init, `load()` restores state.
+/// `init()` is deliberately free of file I/O so it never blocks the main
+/// thread.  Call `loadPersisted()` once from a `Task.detached` block after
+/// the app's main run loop has started to restore previously saved state.
+/// All mutations call `save()` immediately.
 @Observable
 final class SampleStore {
 
@@ -18,32 +21,44 @@ final class SampleStore {
     // MARK: - Private
 
     private let fileManager: FileManager
-    private let samplesDirectory: URL
-    private let indexURL: URL
 
     /// Minimum free space required before accepting a write (100 MB).
     private static let minimumFreeSpaceBytes: Int64 = 100 * 1024 * 1024
+
+    /// Resolved lazily on first file access so that init() never calls
+    /// fileManager.urls(for:in:) on the main thread — that call contacts the
+    /// iOS sandbox-container daemon which can block for minutes in headless
+    /// CI environments where the container is not yet provisioned.
+    @ObservationIgnored private lazy var documentsURL: URL = {
+        fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+    }()
+
+    @ObservationIgnored private lazy var samplesDirectory: URL =
+        documentsURL.appendingPathComponent("samples", isDirectory: true)
+
+    @ObservationIgnored private lazy var indexURL: URL =
+        documentsURL.appendingPathComponent("pad_index.json")
 
     // MARK: - Init
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
         self.pads = (0...7).map { Pad(id: $0) }
-
-        guard let documents = fileManager.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        ).first else {
-            preconditionFailure("Documents directory unavailable")
-        }
-        samplesDirectory = documents.appendingPathComponent("samples", isDirectory: true)
-        indexURL = documents.appendingPathComponent("pad_index.json")
-
-        createSamplesDirectoryIfNeeded()
-        load()
+        // No file I/O here. URL resolution and disk loading are deferred to
+        // loadPersisted() so that SampleStore can be created on any thread
+        // without blocking.
     }
 
     // MARK: - Public API
+
+    /// Restores the pad index from disk.
+    ///
+    /// Designed to be called once from a `Task.detached` block in mpcApp
+    /// so the sandbox-directory lookup never blocks the main run loop.
+    func loadPersisted() {
+        load()
+    }
 
     /// Assigns a WAV file at `sourceURL` to the pad at `padIndex`.
     /// Copies the file into the app sandbox, updates the index.
@@ -51,6 +66,7 @@ final class SampleStore {
     func assign(sampleAt sourceURL: URL, toPad padIndex: Int, metadata: SampleMetadata) throws -> URL {
         precondition((0...7).contains(padIndex))
         try checkStorageAvailability()
+        createSamplesDirectoryIfNeeded()
 
         let uuid = UUID().uuidString
         let filename = "\(padIndex)_\(uuid).wav"
