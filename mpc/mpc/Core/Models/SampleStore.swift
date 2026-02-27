@@ -30,14 +30,26 @@ final class SampleStore {
         self.fileManager = fileManager
         self.pads = (0...7).map { Pad(id: $0) }
 
-        guard let documents = fileManager.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        ).first else {
-            preconditionFailure("Documents directory unavailable")
+        // In CI test environments the iOS Simulator sandbox container may not be
+        // provisioned, causing fileManager.urls(for:in:) to block the main thread
+        // for 2+ minutes waiting for the container daemon. Use a temp directory
+        // when running under XCTest so both the test target and the test host
+        // initialise quickly without any sandbox IPC.
+        let documentsURL: URL
+        if ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil {
+            documentsURL = fileManager.temporaryDirectory.appendingPathComponent("mpc_tests")
+        } else {
+            guard let found = fileManager.urls(
+                for: .documentDirectory,
+                in: .userDomainMask
+            ).first else {
+                preconditionFailure("Documents directory unavailable")
+            }
+            documentsURL = found
         }
-        samplesDirectory = documents.appendingPathComponent("samples", isDirectory: true)
-        indexURL = documents.appendingPathComponent("pad_index.json")
+
+        samplesDirectory = documentsURL.appendingPathComponent("samples", isDirectory: true)
+        indexURL = documentsURL.appendingPathComponent("pad_index.json")
 
         // Only read on init; the samples directory is created lazily on first write.
         load()
