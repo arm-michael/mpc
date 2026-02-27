@@ -32,11 +32,12 @@ final class SampleStore {
 
         // In CI test environments the iOS Simulator sandbox container may not be
         // provisioned, causing fileManager.urls(for:in:) to block the main thread
-        // for 2+ minutes waiting for the container daemon. Use a temp directory
-        // when running under XCTest so both the test target and the test host
-        // initialise quickly without any sandbox IPC.
+        // for 2+ minutes waiting for the container daemon. XCTest.framework is
+        // DYLD-injected before @main runs, so NSClassFromString("XCTestCase") is
+        // a reliable runtime indicator that avoids any environment-variable naming
+        // uncertainty across Xcode versions.
         let documentsURL: URL
-        if ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil {
+        if NSClassFromString("XCTestCase") != nil {
             documentsURL = fileManager.temporaryDirectory.appendingPathComponent("mpc_tests")
         } else {
             guard let found = fileManager.urls(
