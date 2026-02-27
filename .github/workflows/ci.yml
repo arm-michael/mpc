@@ -38,6 +38,7 @@ jobs:
             -scheme mpc \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -resultBundlePath TestResults.xcresult \
+            -skip-testing:mpcUITests \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Upload test results

@@ -1,29 +1,32 @@
 import SwiftUI
 
+/// Top-level application model holding all app-scoped services.
+@Observable
+private final class AppModel {
+    let audioEngine = AudioEngine()
+    let sampleStore = SampleStore()
+    let playbackService: PlaybackService
+
+    init() {
+        playbackService = PlaybackService(engine: audioEngine)
+    }
+}
+
 @main
 struct MPCApp: App {
 
-    @State private var audioEngine: AudioEngine
-    @State private var sampleStore: SampleStore
-    @State private var playbackService: PlaybackService
+    @State private var model = AppModel()
 
     @Environment(\.scenePhase) private var scenePhase
-
-    init() {
-        let engine = AudioEngine()
-        _audioEngine = State(wrappedValue: engine)
-        _sampleStore = State(wrappedValue: SampleStore())
-        _playbackService = State(wrappedValue: PlaybackService(engine: engine))
-    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(audioEngine)
-                .environment(sampleStore)
-                .environment(playbackService)
+                .environment(model.audioEngine)
+                .environment(model.sampleStore)
+                .environment(model.playbackService)
                 .task {
-                    try? AudioSessionManager.shared.configure(for: audioEngine)
+                    try? AudioSessionManager.shared.configure(for: model.audioEngine)
                 }
         }
         .onChange(of: scenePhase) { _, phase in
