@@ -25,7 +25,12 @@ struct MPCApp: App {
                 .environment(model.sampleStore)
                 .environment(model.playbackService)
                 .task {
-                    try? AudioSessionManager.shared.configure(for: model.audioEngine)
+                    // Run audio session setup off the main actor so the main run loop
+                    // stays free for XCTest bootstrap in headless CI environments where
+                    // the CoreAudio daemon is unavailable and setActive / start() block.
+                    Task.detached(priority: .userInitiated) {
+                        try? AudioSessionManager.shared.configure(for: model.audioEngine)
+                    }
                 }
         }
         .onChange(of: scenePhase) { _, phase in
