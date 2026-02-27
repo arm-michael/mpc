@@ -2,11 +2,8 @@ import SwiftUI
 
 /// Top-level container holding all app-scoped services for their lifetime.
 ///
-/// All properties are `lazy` so that `AppModel.init()` is trivially fast.
-/// Heavy initialisation (AVAudioEngine, FileManager sandbox access) is
-/// deferred until SwiftUI first accesses each property when evaluating
-/// `body`, which happens after the main run loop has started and XCTest
-/// has had the chance to bootstrap in test environments.
+/// All properties are `lazy` so that `AppModel.init()` is trivially fast
+/// and performs no file I/O or audio-daemon access on the main thread.
 private final class AppModel {
     lazy var audioEngine = AudioEngine()
     lazy var sampleStore = SampleStore()
@@ -27,10 +24,12 @@ struct MPCApp: App {
                 .environment(model.sampleStore)
                 .environment(model.playbackService)
                 .task {
-                    // Run audio session setup off the main actor so the main run loop
-                    // stays free for XCTest bootstrap in headless CI environments where
-                    // the CoreAudio daemon is unavailable and setActive / start() block.
+                    // Run all startup I/O off the main actor so the main run loop
+                    // stays free for XCTest bootstrap. In headless CI simulators the
+                    // sandbox-container daemon and CoreAudio daemon may be unavailable,
+                    // causing their respective API calls to block for minutes.
                     Task.detached(priority: .userInitiated) {
+                        model.sampleStore.loadPersisted()
                         try? AudioSessionManager.shared.configure(for: model.audioEngine)
                     }
                 }

@@ -7,7 +7,10 @@ import Observation
 ///   - `Documents/pad_index.json` — the canonical pad → sample mapping
 ///   - `Documents/samples/{padID}_{uuid}.wav` — the audio assets
 ///
-/// All mutations call `save()` immediately. On init, `load()` restores state.
+/// `init()` is deliberately free of file I/O so it never blocks the main
+/// thread.  Call `loadPersisted()` once from a `Task.detached` block after
+/// the app's main run loop has started to restore previously saved state.
+/// All mutations call `save()` immediately.
 @Observable
 final class SampleStore {
 
@@ -18,45 +21,49 @@ final class SampleStore {
     // MARK: - Private
 
     private let fileManager: FileManager
-    private let samplesDirectory: URL
-    private let indexURL: URL
 
     /// Minimum free space required before accepting a write (100 MB).
     private static let minimumFreeSpaceBytes: Int64 = 100 * 1024 * 1024
+
+    /// Resolved lazily on first file access so that init() never calls
+    /// fileManager.urls(for:in:) on the main thread — that call contacts the
+    /// iOS sandbox-container daemon which can block for minutes in headless
+    /// CI environments where the container is not yet provisioned.
+    @ObservationIgnored private lazy var documentsURL: URL = {
+        guard let url = fileManager.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        ).first else {
+            preconditionFailure("Documents directory unavailable")
+        }
+        return url
+    }()
+
+    @ObservationIgnored private lazy var samplesDirectory: URL =
+        documentsURL.appendingPathComponent("samples", isDirectory: true)
+
+    @ObservationIgnored private lazy var indexURL: URL =
+        documentsURL.appendingPathComponent("pad_index.json")
 
     // MARK: - Init
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
         self.pads = (0...7).map { Pad(id: $0) }
-
-        // In CI test environments the iOS Simulator sandbox container may not be
-        // provisioned, causing fileManager.urls(for:in:) to block the main thread
-        // for 2+ minutes waiting for the container daemon. XCTest.framework is
-        // DYLD-injected before @main runs, so NSClassFromString("XCTestCase") is
-        // a reliable runtime indicator that avoids any environment-variable naming
-        // uncertainty across Xcode versions.
-        let documentsURL: URL
-        if NSClassFromString("XCTestCase") != nil {
-            documentsURL = fileManager.temporaryDirectory.appendingPathComponent("mpc_tests")
-        } else {
-            guard let found = fileManager.urls(
-                for: .documentDirectory,
-                in: .userDomainMask
-            ).first else {
-                preconditionFailure("Documents directory unavailable")
-            }
-            documentsURL = found
-        }
-
-        samplesDirectory = documentsURL.appendingPathComponent("samples", isDirectory: true)
-        indexURL = documentsURL.appendingPathComponent("pad_index.json")
-
-        // Only read on init; the samples directory is created lazily on first write.
-        load()
+        // No file I/O here. URL resolution and disk loading are deferred to
+        // loadPersisted() so that SampleStore can be created on any thread
+        // without blocking.
     }
 
     // MARK: - Public API
+
+    /// Restores the pad index from disk.
+    ///
+    /// Designed to be called once from a `Task.detached` block in mpcApp
+    /// so the sandbox-directory lookup never blocks the main run loop.
+    func loadPersisted() {
+        load()
+    }
 
     /// Assigns a WAV file at `sourceURL` to the pad at `padIndex`.
     /// Copies the file into the app sandbox, updates the index.
