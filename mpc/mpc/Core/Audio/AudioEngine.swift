@@ -14,15 +14,11 @@ final class AudioEngine {
 
     // MARK: - Private
 
-    private let engine: AVAudioEngine
+    /// Deferred so that AVAudioEngine() is not created during app init (which blocks the
+    /// CoreAudio daemon handshake and hangs the main thread in headless CI environments).
+    @ObservationIgnored private lazy var engine: AVAudioEngine = AVAudioEngine()
 
     var mainMixerNode: AVAudioMixerNode { engine.mainMixerNode }
-
-    // MARK: - Init
-
-    init() {
-        engine = AVAudioEngine()
-    }
 
     // MARK: - Lifecycle
 
@@ -33,6 +29,7 @@ final class AudioEngine {
     }
 
     func stop() {
+        guard isRunning else { return }
         engine.stop()
         isRunning = false
     }
