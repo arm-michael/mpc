@@ -8,11 +8,11 @@ struct PadView: View {
 
     let padIndex: Int
 
-    @Environment(SampleStore.self) private var store
-    @Environment(PlaybackService.self) private var playback
+    @Environment(SampleStore.self) private var store: SampleStore?
+    @Environment(PlaybackService.self) private var playback: PlaybackService?
     @State private var viewModel: PadViewModel
 
-    private var pad: Pad { store.pads[padIndex] }
+    private var pad: Pad { store?.pads[padIndex] ?? Pad(id: padIndex) }
 
     init(padIndex: Int) {
         self.padIndex = padIndex
@@ -70,10 +70,10 @@ struct PadView: View {
         Button("Load from Files") {
             // TODO(#28): wire to DocumentPickerView
         }
-        if pad.hasSample {
+        if pad.hasSample, let store {
             Button("Remove Sample", role: .destructive) {
                 try? store.removeSample(fromPad: padIndex)
-                playback.unload(padIndex: padIndex)
+                playback?.unload(padIndex: padIndex)
             }
         }
     }
@@ -81,7 +81,7 @@ struct PadView: View {
     // MARK: - Actions
 
     private func handleTap() {
-        guard pad.hasSample else { return }
+        guard pad.hasSample, let playback else { return }
         playback.play(padIndex: padIndex)
         viewModel.flash()
     }

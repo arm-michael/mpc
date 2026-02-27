@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Top-level application model holding all app-scoped services.
-@Observable
+/// Top-level container holding all app-scoped services for their lifetime.
 private final class AppModel {
     let audioEngine = AudioEngine()
     let sampleStore = SampleStore()
