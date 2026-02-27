@@ -39,7 +39,7 @@ final class SampleStore {
         samplesDirectory = documents.appendingPathComponent("samples", isDirectory: true)
         indexURL = documents.appendingPathComponent("pad_index.json")
 
-        createSamplesDirectoryIfNeeded()
+        // Only read on init; the samples directory is created lazily on first write.
         load()
     }
 
@@ -51,6 +51,7 @@ final class SampleStore {
     func assign(sampleAt sourceURL: URL, toPad padIndex: Int, metadata: SampleMetadata) throws -> URL {
         precondition((0...7).contains(padIndex))
         try checkStorageAvailability()
+        createSamplesDirectoryIfNeeded()
 
         let uuid = UUID().uuidString
         let filename = "\(padIndex)_\(uuid).wav"

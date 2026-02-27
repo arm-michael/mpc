@@ -1,14 +1,16 @@
 import SwiftUI
 
 /// Top-level container holding all app-scoped services for their lifetime.
+///
+/// All properties are `lazy` so that `AppModel.init()` is trivially fast.
+/// Heavy initialisation (AVAudioEngine, FileManager sandbox access) is
+/// deferred until SwiftUI first accesses each property when evaluating
+/// `body`, which happens after the main run loop has started and XCTest
+/// has had the chance to bootstrap in test environments.
 private final class AppModel {
-    let audioEngine = AudioEngine()
-    let sampleStore = SampleStore()
-    let playbackService: PlaybackService
-
-    init() {
-        playbackService = PlaybackService(engine: audioEngine)
-    }
+    lazy var audioEngine = AudioEngine()
+    lazy var sampleStore = SampleStore()
+    lazy var playbackService: PlaybackService = PlaybackService(engine: audioEngine)
 }
 
 @main
