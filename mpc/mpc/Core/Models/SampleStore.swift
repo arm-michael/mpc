@@ -30,13 +30,8 @@ final class SampleStore {
     /// iOS sandbox-container daemon which can block for minutes in headless
     /// CI environments where the container is not yet provisioned.
     @ObservationIgnored private lazy var documentsURL: URL = {
-        guard let url = fileManager.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        ).first else {
-            preconditionFailure("Documents directory unavailable")
-        }
-        return url
+        fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
     }()
 
     @ObservationIgnored private lazy var samplesDirectory: URL =

@@ -17,6 +17,14 @@ struct MPCApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
 
+    /// `true` when the app process is a test host (an `.xctest` bundle is loaded).
+    ///
+    /// Evaluated once at the call site. XCTest / Swift Testing inject the test
+    /// bundle before `UIApplicationMain` returns, so this check is reliable by
+    /// the time SwiftUI evaluates `body` or fires `.task {}`.
+    private static let isRunningInTestHost: Bool =
+        Bundle.allBundles.contains { $0.bundlePath.hasSuffix(".xctest") }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -24,10 +32,11 @@ struct MPCApp: App {
                 .environment(model.sampleStore)
                 .environment(model.playbackService)
                 .task {
-                    // Run all startup I/O off the main actor so the main run loop
-                    // stays free for XCTest bootstrap. In headless CI simulators the
-                    // sandbox-container daemon and CoreAudio daemon may be unavailable,
-                    // causing their respective API calls to block for minutes.
+                    // Skip all startup I/O when running as a test host.  The
+                    // sandbox-container daemon and CoreAudio daemon may be
+                    // unavailable in headless CI simulators (CODE_SIGNING_ALLOWED=NO),
+                    // which can crash the process before XCTest bootstraps.
+                    guard !Self.isRunningInTestHost else { return }
                     Task.detached(priority: .userInitiated) {
                         model.sampleStore.loadPersisted()
                         try? AudioSessionManager.shared.configure(for: model.audioEngine)
@@ -35,7 +44,7 @@ struct MPCApp: App {
                 }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
+            if phase == .active, !Self.isRunningInTestHost {
                 AudioSessionManager.shared.resume()
             }
         }

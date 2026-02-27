@@ -127,8 +127,9 @@ struct SampleStoreTests {
         )
         try store.assign(sampleAt: wavURL, toPad: 3, metadata: meta)
 
-        // Re-initialize store — should reload from disk
+        // Re-initialize store and explicitly load persisted state from disk
         let reloaded = SampleStore()
+        reloaded.loadPersisted()
         #expect(reloaded.pads[3].hasSample)
         #expect(reloaded.pads[3].metadata?.originalPrompt == "test prompt")
     }
